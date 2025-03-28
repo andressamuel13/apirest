@@ -1,7 +1,19 @@
 import { pool } from "../db.js";
 
-export const getEmployes = (req, res) => {
-  res.send("obteniendo empleados");
+export const getEmployes = async (req, res) => {
+  const obtener = await pool.query("select * from employee");
+  res.json(obtener[0]);
+};
+
+export const getEmployeId = async (req, res) => {
+  const [id] = await pool.query("select * from employee where id = ?", [
+    req.params.id,
+  ]);
+
+  if (id.length <= 0)
+    return res.status(404).send({ message: "el empleado no existe" });
+
+  res.json(id[0]);
 };
 
 export const createEmploye = async (req, res) => {
@@ -34,4 +46,35 @@ export const createEmploye = async (req, res) => {
       message: "error al crear empleado",
     });
   }
+};
+
+export const deleteEmploye = async (req, res) => {
+  const [eliminar] = await pool.query("delete from employee where id = ?", [
+    req.params.id,
+  ]);
+
+  if (eliminar.affectedRows <= 0) {
+    return res.status(404).json({
+      message: "el empleado no existe",
+    });
+  }
+
+  res.sendStatus(204);
+};
+
+export const actualizarEmpleado = async (req, res) => {
+  const { id, name, salary } = req.body;
+
+  const [result] = await pool.query(
+    "update employee set name = ?, salary = ? where id = ?",
+    [name, salary, id]
+  );
+
+  if (result.affectedRows === 0) {
+    return res.status(404).json({
+      message: "el empleado no existe",
+    });
+  }
+
+  res.json("recibido");
 };
